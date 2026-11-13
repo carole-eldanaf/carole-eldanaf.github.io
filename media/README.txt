@@ -34,10 +34,16 @@ FINAL RESULT - words on the left, four portraits on the right
 ABOUT - your text only. No picture, no video.
 
 NOT SHOWN ON THE PAGE
-  preview.jpg           1200 x 630. The picture that appears when the
+  share.jpg             1200 x 630. The picture that appears when the
                         link is shared on WhatsApp, Instagram, iMessage
-                        and so on. Made from a frame of hero.mp4.
+                        and so on. Cropped from progress-02-01.jpg.
                         Replace it with any 1200 x 630 JPEG you prefer.
+
+                        IF YOU CHANGE IT, give the new file a NEW NAME
+                        and change the two og:image / twitter:image
+                        lines in index.html to match. WhatsApp remembers
+                        pictures by their address, so reusing the same
+                        filename makes it keep showing the old one.
 
 
 WHY THE FINAL PICTURES ARE CALLED progress-02
