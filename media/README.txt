@@ -33,6 +33,12 @@ FINAL RESULT - words on the left, four portraits on the right
 
 ABOUT - your text only. No picture, no video.
 
+NOT SHOWN ON THE PAGE
+  preview.jpg           1200 x 630. The picture that appears when the
+                        link is shared on WhatsApp, Instagram, iMessage
+                        and so on. Made from a frame of hero.mp4.
+                        Replace it with any 1200 x 630 JPEG you prefer.
+
 
 WHY THE FINAL PICTURES ARE CALLED progress-02
 ---------------------------------------------
