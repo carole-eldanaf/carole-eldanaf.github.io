@@ -1,0 +1,45 @@
+# ══════════════════════════════════════════════════════════════════
+#  WHAT STAYS ON YOUR COMPUTER AND NEVER GOES TO GITHUB
+#  ----------------------------------------------------------------
+#  Listing a file here does NOT delete it. It stays in your folder
+#  exactly as it is. It simply is not uploaded to the website.
+#
+#  THE IMPORTANT ONE: about-video.mp4 is 318 MB. GitHub refuses any
+#  single file over 100 MB, and it refuses the WHOLE upload, not just
+#  that file. Worse, once a big file has been committed even once it
+#  stays buried in the history and has to be surgically removed. So it
+#  has to be excluded before the very first upload, not after.
+# ══════════════════════════════════════════════════════════════════
+
+# ── Old media the website no longer looks for ────────────────────
+media/about-video.mp4
+media/about-video cancelled.mp4
+media/cancelled.mp4
+media/final-video.mp4
+media/about-poster.jpg
+media/progress-02-01 cancelled.jpg
+media/final-01.jpg
+media/final-02.jpg
+media/final-03.jpg
+media/final-04.jpg
+media/CaroleDanaf_2.jpg
+
+# ── Your untouched original videos, kept as a safety net ────────
+#  The compressed versions are what the website uses. These are the
+#  full-size files they came from, in case you ever want them back.
+media/_originals/
+media/_compressed/
+
+# ── Working files that mean nothing on a web server ──────────────
+index-dark.html
+EDIT MY WEBSITE TEXT.lnk
+.claude/
+__check*.html
+__check*.js
+
+# ── Windows / OneDrive clutter ───────────────────────────────────
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+~$*

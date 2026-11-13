@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Draw scrollbars and form controls dark too. -->
+    <meta name="color-scheme" content="dark">
+    <title>Art Practice | Colourful Process</title>
+
+    <!-- Fonts. The whole page is now Proxima Nova: Thin (100) for body text
+         and the logo, Regular (400) for titles.
+         Montserrat = stand-in for Proxima Nova (see --font-display below).
+         Proxima Nova is an Adobe Fonts (paid) family and CANNOT be served from
+         Google Fonts. If you have an Adobe Fonts kit, paste its line here:
+             <link rel="stylesheet" href="https://use.typekit.net/XXXXXXX.css">
+         and the stack below will pick up the real Proxima Nova automatically. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (minimal, only used for arrow) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- All the words on the site live in content.js — edit that file, not
+         this one. If it is missing or has a typo, the wording written into
+         the HTML below is used instead, so the page always works. -->
+    <script src="content.js"></script>
+    <style>
+        :root {
+            /* Real Proxima Nova first (Adobe kit or locally installed),
+               Montserrat as the visual stand-in, then system sans. */
+            --font-display: 'Proxima Nova', 'proxima-nova', 'Montserrat',
+                            -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                            Helvetica, Arial, sans-serif;
+            --turquoise: 64, 224, 208;
+
+            /* How far every full-width picture and the hero video sit in from
+               the window edge. This is the black margin the arrows live in,
+               and it is what makes the video and the pictures share edges. */
+            --media-inset: clamp(64px, 7vw, 150px);
+
+            /* ── PALETTE ───────────────────────────────────────────
+               Every colour on the page comes from these six lines, so
+               the whole look can be retuned in one place. The dark
+               values are kept in the comments if you ever want them. */
+            /* Taken from bygerardvisuals.com: pure black, and neutral white
+               at different strengths rather than tinted greys. */
+            --bg:      #000000;                      /* light: #ffffff */
+            --panel:   #111111;                      /* light: #fafafa */
+            --fg:      #ffffff;                      /* light: #111111 */
+            --fg-soft: rgba(255, 255, 255, 0.65);    /* light: #2b2b2b */
+            --fg-dim:  rgba(255, 255, 255, 0.5);     /* light: #888888 */
+            --line:    rgba(255, 255, 255, 0.18);    /* light: #cccccc */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Every section's body text: Proxima Nova Thin.
+           Titles override this with regular (400) further down. */
+        body {
+            background-color: var(--bg);
+            font-family: var(--font-display);
+            font-weight: 100;
+            color: var(--fg);
+            /* 100vw counts the scrollbar, so a full-bleed child would
+               otherwise push a sideways scrollbar onto the page. */
+            overflow-x: hidden;
+        }
+
+        /* ── FULLSCREEN HERO (the main media) ───────────────────────── */
+        .hero-fullscreen {
+            position: relative;
+            /* Original: fills the whole screen, edge to edge. */
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #0a0a0a;
+            cursor: pointer;
+        }
+        .hero-artwork {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #ff7b00, #ff0055, #9900ff, #00ccff);
+            background-size: 200% 200%;
+            animation: artisticShift 14s ease infinite;
+        }
+        /* Your video, once media/hero.mp4 exists. It sits on top of the
+           gradient above — if the file is missing or fails, the script at the
+           bottom removes it and the gradient shows through instead. */
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;      /* fills the screen, crops overflow */
+            display: block;
+            pointer-events: none;   /* clicks pass through to the hero (bar rule 1) */
+        }
+        @keyframes artisticShift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        /* ── BOTTOM BAR — fading turquoise, Proxima Nova ────────────── */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            /* Logo far left, menu far right. The top and bottom padding are
+               equal on purpose: that makes the bar taller and puts the words
+               on its vertical centre line. (Uneven padding sat them high.) */
+            justify-content: space-between;
+            gap: 2rem;
+            padding: 2.25rem 3rem;
+            z-index: 1000;
+            /* The bar lettering is black, so on a black page the fade has to
+               stay solid enough behind the words to keep them readable. */
+            background: linear-gradient(to top,
+                        rgba(var(--turquoise), 0.95) 0%,
+                        rgba(var(--turquoise), 0.80) 55%,
+                        rgba(var(--turquoise), 0) 100%);
+            backdrop-filter: blur(8px);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            font-family: var(--font-display);
+            /* hidden bar must never swallow clicks */
+            pointer-events: none;
+        }
+        .bottom-bar.visible {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Logo — left, a little larger.
+           Black, and black everywhere: the bar never changes colour. The soft
+           white shadow is what keeps it legible over the colourful hero. */
+        .bottom-logo {
+            font-size: 2.4rem;
+            font-weight: 300;          /* Proxima Nova Light */
+            letter-spacing: 0.02em;
+            color: #000000;
+            text-decoration: none;
+            line-height: 1;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.35);
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        /* Nav — same line as the logo, uppercase, light, well spaced */
+        .bottom-nav {
+            display: flex;
+            align-items: center;
+            gap: 3.5rem;
+        }
+        .bottom-nav a {
+            color: #000000;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 300;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: color 0.2s ease, opacity 0.2s ease, text-shadow 0.2s;
+            opacity: 0.9;
+            border-bottom: 1px solid transparent;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.35);
+            font-family: inherit;
+        }
+        .bottom-nav a:hover {
+            opacity: 1;
+            border-bottom-color: #000000;
+        }
+
+        /* The `end-zone` class is still toggled by the script at the contact
+           section, but it no longer changes the text colour — the bar is black
+           top and bottom. Left as a hook in case the end of the page ever needs
+           its own treatment again. */
+
+        /* ── MAIN CONTENT ───────────────────────────────────────────── */
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem 6rem;
+            background: var(--bg);
+        }
+
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 5rem;
+        }
+        .process-block {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        /* Sections with a slider: words on the left, portrait on the right,
+           side by side. Wraps back to stacked when there isn't room. */
+        .process-block.with-slider {
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        .process-block.with-slider .block-text {
+            flex: 1 1 300px;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .process-block.with-slider .process-description {
+            margin-bottom: 0;
+        }
+        .process-block.with-slider .slider {
+            flex: 0 0 auto;
+            margin-top: 0;
+            margin-bottom: 0;
+            /* Right edge on exactly the same line as the video and the 5:4
+               pictures above — same formula, so they cannot drift apart. */
+            margin-right: calc(50% - 50vw + var(--media-inset));
+            /* room on the left for the back arrow */
+            margin-left: 96px;
+        }
+        /* The progress 02 slot holds a single video instead of a picture. A
+           picture tells the browser how wide it is; a video does not, so the
+           browser falls back to a 300px default and the slot would come out
+           narrower than the portrait series below it. Telling it to fill the
+           space lets the same max-width rules size it, on a wide screen and
+           on a phone alike, so the two always match. */
+        .slider.video-slider {
+            width: 100%;
+        }
+        /* Forward arrow always to the RIGHT of the portrait, out in the black
+           margin. Back arrow in the gap between the words and the picture. */
+        .process-block.with-slider .slider-arrow.next {
+            right: calc((-44px - var(--media-inset)) / 2);
+            left: auto;
+        }
+        .process-block.with-slider .slider-arrow.prev {
+            /* Exactly as far from the picture as the forward arrow is, so the
+               portrait sits centred between the two. */
+            left: calc((-44px - var(--media-inset)) / 2);
+            right: auto;
+        }
+        .process-title {
+            text-align: left;
+            font-family: var(--font-display);
+            font-weight: 400;          /* Proxima Nova Regular */
+            font-size: 1.5rem;         /* 24px — their section-heading size */
+            letter-spacing: -0.01em;
+            color: var(--fg);
+            margin-bottom: 0.5rem;
+        }
+        .process-description {
+            /* Left-aligned and left-anchored: the block starts at the edge of
+               the content column instead of being centred in it. The width cap
+               stays so lines don't run too long to read comfortably. */
+            max-width: 780px;
+            margin: 0 0 1.5rem 0;
+            text-align: left;
+            /* 15px / 24px — the body size bygerardvisuals.com uses */
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--fg-soft);
+        }
+        .process-img {
+            width: 100%;
+            display: block;
+        }
+        /* Edge-to-edge picture. The content column is capped at 1400px and
+           padded, so this pulls back out to the full window width by giving
+           itself negative side margins equal to that leftover space. */
+        .process-img.full-bleed {
+            width: 100vw;
+            max-width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+        }
+        .process-img img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 0px;
+        }
+        /* ── PORTRAIT SLIDER (1 video + 4 pictures, 1080 x 1920) ────── */
+        .slider {
+            /* Height of the portrait media; its width follows from 9:16.
+               The slider box is exactly that wide, so only ONE picture is
+               ever visible and the arrows sit right beside it. */
+            --media-h: min(86vh, 860px);
+            position: relative;
+            /* auto side margins centre the picture in the column */
+            margin: 1rem auto 0;
+            /* leave room either side for the arrows to sit fully outside */
+            max-width: min(calc(var(--media-h) * 0.5625), calc(100% - 130px));
+        }
+        .slider-track {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            /* the arrows do the scrolling, so hide the bar itself */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .slider-track::-webkit-scrollbar {
+            display: none;
+        }
+        .slide {
+            /* One slide fills the whole strip, so you see them one by one. */
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            overflow: hidden;
+            background: var(--panel);    /* placeholder while loading */
+        }
+        .slide img, .slide video {
+            width: 100%;
+            height: var(--media-h);      /* 1080 x 1920 portrait */
+            object-fit: cover;
+            display: block;
+        }
+        /* Small round arrows sitting over the edges of the strip. */
+        /* ── FULL-BLEED SLIDER (progress 01) ─────────────────────────
+           Same one-at-a-time behaviour, but each picture spans the whole
+           window instead of sitting in the content column. */
+        .slider.bleed-slider {
+            max-width: none;
+            /* As wide as the margins allow, BUT never so wide that its 5:4
+               height overflows the window — 80vh x 1.25 is the widest a 5:4
+               picture can be and still fit on screen whole. */
+            /* The third limit (100%) keeps it inside the content column, so
+               the auto margins below always centre it properly. */
+            width: min(calc(100vw - 2 * var(--media-inset)), calc(80vh * 1.25), 100%);
+            /* centred on the page */
+            margin: 1rem auto 0;
+        }
+        /* Same 5:4 shape as the hero video, full window width. Your pictures
+           are 2250 x 1824, which is 5:4 give or take a hair, so almost
+           nothing is trimmed. */
+        .bleed-slider .slide img {
+            height: auto;
+            aspect-ratio: 5 / 4;
+            object-fit: cover;
+        }
+        /* There is no "outside" on a full-width picture, so these arrows sit
+           on top of it — dark discs so they read against any photograph. */
+        .bleed-slider .slider-arrow {
+            background: rgba(0, 0, 0, 0.45);
+            border-color: rgba(255, 255, 255, 0.75);
+            color: #ffffff;
+            backdrop-filter: blur(4px);
+        }
+        .bleed-slider .slider-arrow:hover {
+            background: rgba(0, 0, 0, 0.8);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+        /* Centred within the black margin: half the margin, minus half the
+           arrow, measured out from the picture's edge. */
+        .bleed-slider .slider-arrow.prev { left: calc((-44px - var(--media-inset)) / 2); }
+        .bleed-slider .slider-arrow.next { right: calc((-44px - var(--media-inset)) / 2); }
+
+        /* Arrows sit clear of the picture, one on each side. */
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            margin: 0;
+            /* --line is too faint against pure black for a control you have
+               to find, so the arrows use the stronger dim grey. */
+            border: 1px solid var(--fg-dim);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--fg);
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            line-height: 1;
+            font-weight: 300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+        .slider-arrow:hover {
+            background: var(--fg);
+            border-color: var(--fg);
+            color: var(--bg);
+        }
+        .slider-arrow.prev { left: -62px; }
+        .slider-arrow.next { right: -62px; }
+        .slider-arrow[hidden] { display: none; }
+
+        /* ── ABOUT ──────────────────────────────────────────────────── */
+        .about-section {
+            /* Same footprint as the contact square below it: 1000px wide,
+               centred, and the same 2.5rem of inner padding. That makes the
+               heading and the words here start on exactly the same line as
+               the ones inside the contact panel. No background, so it reads
+               as open text rather than a second box. */
+            max-width: 1000px;
+            margin: 5rem auto 4rem;
+            padding: 0 2.5rem;
+        }
+        .about-video {
+            display: block;
+            margin-bottom: 2.5rem;
+            /* Same left/right edges as the 5:4 pictures and the portrait
+               series — same formula, so they cannot drift apart. */
+            margin-left: calc(50% - 50vw + var(--media-inset));
+            margin-right: calc(50% - 50vw + var(--media-inset));
+        }
+        .about-video video {
+            width: 100%;
+            /* A FIXED box, so playing cannot resize it. Without this the
+               element takes the cover image's shape (16:9) at first and then
+               jumps to the video's own shape (9:16 portrait) once it loads.
+               `contain` fits the portrait footage inside this frame whole —
+               nothing cropped, nothing overflowing. */
+            aspect-ratio: 16 / 9;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+        /* The About section is text only — the photo that used to sit beside
+           it has been removed, and so have the rules that placed it. */
+        .about-description {
+            max-width: 780px;
+            margin: 0;
+            text-align: left;
+            font-size: 0.9375rem;   /* 15px, same as the other body text */
+            line-height: 1.6;
+            color: var(--fg-soft);
+        }
+        .about-description strong {
+            color: var(--fg);
+        }
+
+        /* ── CONTACT ────────────────────────────────────────────────── */
+        .contact-section {
+            max-width: 1000px;
+            margin: 4rem auto 5rem;
+            background: var(--panel);
+            padding: 2.5rem;
+        }
+        /* One style for both headings, so "The Artist" and "Contact" are
+           visibly the same kind of thing. */
+        .contact-title, .about-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;         /* 24px, matching the other headings */
+            font-weight: 400;          /* Proxima Nova Regular */
+            margin-bottom: 2rem;
+            letter-spacing: -0.01em;
+            color: var(--fg);
+            border-left: 4px solid #40e0d0;
+            padding-left: 1rem;
+        }
+        .contact-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+        }
+        .contact-info {
+            flex: 1;
+        }
+        .contact-info p {
+            margin-bottom: 1rem;
+            font-size: 0.9375rem;   /* 15px, same as the body text */
+            line-height: 1.6;
+        }
+        .contact-info {
+            color: var(--fg-soft);
+        }
+        .contact-info a {
+            color: var(--fg);
+            text-decoration: none;
+            border-bottom: 1px solid var(--fg-dim);
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .contact-info a:hover {
+            border-bottom-color: #40e0d0;
+            color: #7ff5e8;
+        }
+        .contact-info strong {
+            font-weight: 600;
+            font-family: var(--font-display);
+            color: var(--fg);
+        }
+        .contact-form {
+            flex: 1.5;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--line);
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--fg);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: var(--fg-dim);
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-bottom-color: #40e0d0;
+        }
+        button {
+            background: #40e0d0;
+            border: none;
+            padding: 0.6rem 1.6rem;
+            color: #000000;
+            cursor: pointer;
+            margin-top: 0.8rem;
+            font-family: inherit;      /* buttons don't inherit fonts on their own */
+            font-weight: 300;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #7ff5e8;
+        }
+        .form-status {
+            margin-top: 0.8rem;
+            font-size: 0.8rem;
+        }
+        .back-to-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: 1px solid var(--line);
+            padding: 0.6rem 1.4rem;
+            color: var(--fg);
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-top: 3rem;
+            transition: 0.2s;
+        }
+        .back-to-top:hover {
+            background: var(--panel);
+            border-color: #40e0d0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--fg-dim);
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 750px) {
+            :root {
+                /* a phone has no room for a wide black margin */
+                --media-inset: 12px;
+            }
+            .bottom-bar {
+                /* A long name plus three menu words won't fit on one phone
+                   line, so let the menu drop underneath — still centred. */
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 1.4rem 1.2rem;
+                gap: 0.5rem 1.5rem;
+            }
+            .bottom-logo {
+                font-size: 1.35rem;
+            }
+            .bottom-nav {
+                gap: 1.6rem;
+            }
+            .bottom-nav a {
+                font-size: 0.8rem;
+                letter-spacing: 1px;
+            }
+            .content-wrapper {
+                padding: 2rem 1.2rem 4rem;
+            }
+            .process-title {
+                font-size: 1.3rem;
+            }
+            .contact-title, .about-title {
+                font-size: 1.5rem;
+            }
+            /* Narrower picture and tighter arrows, so they still sit outside
+               it rather than on top of it. */
+            .slider {
+                --media-h: min(62vh, 560px);
+                max-width: calc(100% - 96px);
+            }
+            .slider-arrow {
+                width: 38px;
+                height: 38px;
+                font-size: 1.2rem;
+            }
+            .slider-arrow.prev { left: -46px; }
+            .slider-arrow.next { right: -46px; }
+            /* Phones: only a hairline of margin, so the wide pictures keep
+               their arrows on the artwork. */
+            .slider.bleed-slider {
+                max-width: none;
+            }
+            .bleed-slider .slider-arrow.prev { left: 12px; }
+            .bleed-slider .slider-arrow.next { right: 12px; }
+            /* Stacked layout on phones: the portrait goes back to centred,
+               with an arrow either side of it. */
+            .process-block.with-slider .slider {
+                margin: 0 auto;
+            }
+            .process-block.with-slider .slider-arrow.prev { left: -46px; right: auto; }
+            .process-block.with-slider .slider-arrow.next { right: -46px; left: auto; }
+        }
+        section {
+            scroll-margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero-fullscreen" id="home">
+    <!-- Fallback layer: the animated gradient. Always here, shows whenever
+         there is no usable video. -->
+    <div class="hero-artwork"></div>
+
+    <!-- Your hero video. Drop the file in as  media/hero.mp4  and it appears.
+         muted + playsinline are REQUIRED for autoplay to work in browsers. -->
+    <video class="hero-video" autoplay muted loop playsinline preload="auto"
+           poster="media/hero-poster.jpg">
+        <source src="media/hero.mp4" type="video/mp4">
+        <source src="media/hero.webm" type="video/webm">
+    </video>
+</div>
+
+<div class="bottom-bar" id="bottomBar">
+    <div class="bottom-logo" data-text="logo">✦ STUDIO</div>
+    <div class="bottom-nav">
+        <a href="#work-process" data-text="nav-work">WORK</a>
+        <a href="#about-page" data-text="nav-about">ABOUT</a>
+        <a href="#contact-page" data-text="nav-contact">CONTACT</a>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div id="work-process" class="process-flow">
+        <div class="process-block">
+            <div class="process-title" id="progress01-title" data-text="progress-01-title">progress 01 — pigment &amp; gesture studies</div>
+            <div class="process-description">
+                <p data-text="progress-01-text">Early experiments with raw pigments and fluid dynamics. Each stroke was recorded and translated into a digital score, revealing hidden rhythms between hand and material.</p>
+            </div>
+            <!-- Three edge-to-edge pictures, one at a time. Files:
+                 progress-01.jpg, progress-01-02.jpg, progress-01-03.jpg -->
+            <div class="slider bleed-slider" data-slider>
+                <button class="slider-arrow prev" type="button" aria-label="previous" hidden>&lt;</button>
+                <div class="slider-track">
+                    <div class="slide"><img src="media/progress-01.jpg"
+                         data-fallback="https://images.pexels.com/photos/2562628/pexels-photo-2562628.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
+                         alt="progress 01 — picture 1"></div>
+                    <div class="slide"><img src="media/progress-01-02.jpg"
+                         data-fallback="https://images.pexels.com/photos/177598/pexels-photo-177598.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
+                         alt="progress 01 — picture 2"></div>
+                    <div class="slide"><img src="media/progress-01-03.jpg"
+                         data-fallback="https://images.pexels.com/photos/913215/pexels-photo-913215.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
+                         alt="progress 01 — picture 3"></div>
+                </div>
+                <button class="slider-arrow next" type="button" aria-label="next">&gt;</button>
+            </div>
+        </div>
+
+        <div class="process-block with-slider">
+            <div class="block-text">
+                <div class="process-title" data-text="progress-02-title">progress 02 — organic algorithms &amp; field notes</div>
+                <div class="process-description">
+                    <p data-text="progress-02-text">Lichen growth patterns and mineral deposits informed a generative drawing system. The studio log shows how algorithmic errors became intentional textures.</p>
+                </div>
+            </div>
+            <!-- ONE video, in the exact spot and shape the single still had.
+                 No data-slider attribute and no arrows, so nothing scrolls
+                 here. It plays by itself, loops forever and is MUTED —
+                 browsers refuse to autoplay anything with sound.
+                 File: media/progress-02-video.mp4
+                 Optional: media/progress-02.jpg is used as the still frame
+                 shown while the video is loading. -->
+            <div class="slider video-slider">
+                <div class="slider-track">
+                    <div class="slide">
+                        <video autoplay muted loop playsinline preload="auto"
+                               poster="media/progress-02.jpg">
+                            <source src="media/progress-02-video.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="process-block with-slider">
+            <div class="block-text">
+                <div class="process-title" data-text="final-title">final result — «chromatic recursion»</div>
+                <div class="process-description">
+                    <p data-text="final-text">The completed work merges analog brushwork with real-time feedback loops. The final stills capture the tension between control and chance.</p>
+                </div>
+                <div class="process-description">
+                    <p data-text="final-caption">Mixed media on canvas, 120 x 90 cm each panel. The diptych is part of an ongoing series exploring permeable boundaries.</p>
+                </div>
+            </div>
+            <!-- The scrolling series now lives here: the four portraits that
+                 used to be in progress 02, moved down as asked.
+                 Files: progress-02-01.jpg ... progress-02-04.jpg -->
+            <div class="slider" data-slider>
+                <button class="slider-arrow prev" type="button" aria-label="previous" hidden>&lt;</button>
+                <div class="slider-track">
+                    <div class="slide"><img src="media/progress-02-01.jpg"
+                         data-fallback="https://images.pexels.com/photos/913215/pexels-photo-913215.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop"
+                         alt="final — still 1"></div>
+                    <div class="slide"><img src="media/progress-02-02.jpg"
+                         data-fallback="https://images.pexels.com/photos/1586320/pexels-photo-1586320.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop"
+                         alt="final — still 2"></div>
+                    <div class="slide"><img src="media/progress-02-03.jpg"
+                         data-fallback="https://images.pexels.com/photos/2562628/pexels-photo-2562628.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop"
+                         alt="final — still 3"></div>
+                    <div class="slide"><img src="media/progress-02-04.jpg"
+                         data-fallback="https://images.pexels.com/photos/3824841/pexels-photo-3824841.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop"
+                         alt="final — still 4"></div>
+                </div>
+                <button class="slider-arrow next" type="button" aria-label="next">&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <section id="about-page">
+        <div class="about-section">
+            <!-- Heading, then just the words. There is no photo here any
+                 more. The heading's wording lives in content.js, under
+                 "about-heading". -->
+            <div class="about-title" data-text="about-heading">The Artist</div>
+            <div class="about-description">
+                <p data-html="about-line-1">I'm <strong>Carole El Danaf</strong>, an artist and architect specializing in computational and generative design systems.</p>
+                <p style="margin-top: 0.6rem;" data-html="about-line-2">In my current research, KOMO, I focus on the algorithms of motion found in nature.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact-page">
+        <div class="contact-section">
+            <div class="contact-title" data-text="contact-heading">Contact</div>
+            <div class="contact-flex">
+                <div class="contact-info">
+                    <p><strong>Email:</strong> <a href="mailto:eldanafc@gmail.com" data-text="contact-email" data-mailto>eldanafc@gmail.com</a></p>
+                    <p><strong>Instagram:</strong> <a href="https://instagram.com/carole.eldanaf" target="_blank" rel="noopener" data-text="instagram-handle" data-href="instagram-url">@carole.eldanaf</a></p>
+                    <p style="margin-top: 2rem; font-size: 0.9rem;" data-text="contact-note">For inquiries — use the form or email directly.</p>
+                </div>
+                <div class="contact-form">
+                    <form id="direct-form" action="https://api.web3forms.com/submit" method="POST">
+                        <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE">
+                        <input type="hidden" name="subject" value="New message from Art Portfolio" data-value="form-email-subject">
+                        <input type="hidden" name="redirect" value="false">
+                        <div class="form-group">
+                            <input type="text" name="name" placeholder="your name" data-placeholder="form-name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" placeholder="email address" data-placeholder="form-email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="subject_line" placeholder="subject" data-placeholder="form-subject">
+                        </div>
+                        <div class="form-group">
+                            <textarea rows="3" name="message" placeholder="write your message here" data-placeholder="form-message" required></textarea>
+                        </div>
+                        <button type="submit" data-text="form-button">send message →</button>
+                        <div class="form-status" id="formStatusMsg"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div style="display: flex; justify-content: center;">
+        <a href="#home" class="back-to-top"><i class="fas fa-arrow-up"></i> <span data-text="back-to-top">back to home</span></a>
+    </div>
+    <footer data-text="footer">© 2026 Carole El Danaf</footer>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   YOUR WORDS — everything comes from content.js
+   ------------------------------------------------------------------
+   Elements carry a data-text / data-html / data-placeholder key; this
+   looks each one up and writes it in. If content.js is missing or has a
+   typo, nothing is written and the wording already in the HTML shows —
+   the page can never end up blank.
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+    if (typeof CONTENT === 'undefined' || !CONTENT) {
+        console.warn('content.js did not load — using the words built into index.html.');
+        return;
+    }
+    var text = function (key) {
+        return typeof CONTENT[key] === 'string' ? CONTENT[key] : null;
+    };
+
+    // Where you pressed Enter in content.js, the page should break the line
+    // too — HTML collapses real line breaks unless they become <br>.
+    var lineBreaks = function (s) {
+        return s.replace(/\r\n|\r|\n/g, '<br>');
+    };
+
+    if (text('page-title')) document.title = text('page-title').trim();
+
+    // Plain text: anything that looks like a tag is shown as written,
+    // so a stray < in your wording can never break the page layout.
+    document.querySelectorAll('[data-text]').forEach(function (el) {
+        var v = text(el.getAttribute('data-text'));
+        if (v === null) return;
+        var safe = v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        el.innerHTML = lineBreaks(safe);
+    });
+
+    // Text that may contain simple markup like <strong>
+    document.querySelectorAll('[data-html]').forEach(function (el) {
+        var v = text(el.getAttribute('data-html'));
+        if (v !== null) el.innerHTML = lineBreaks(v);
+    });
+
+    // The rest are single-value fields, so stray spaces or line breaks
+    // around them are trimmed off rather than pasted into a link.
+    document.querySelectorAll('[data-placeholder]').forEach(function (el) {
+        var v = text(el.getAttribute('data-placeholder'));
+        if (v !== null) el.placeholder = v.trim();
+    });
+
+    document.querySelectorAll('[data-value]').forEach(function (el) {
+        var v = text(el.getAttribute('data-value'));
+        if (v !== null) el.value = v.trim();
+    });
+
+    // Links whose address also comes from content.js
+    document.querySelectorAll('[data-mailto]').forEach(function (el) {
+        var v = text(el.getAttribute('data-text'));
+        if (v !== null) el.href = 'mailto:' + v.trim();
+    });
+    document.querySelectorAll('[data-href]').forEach(function (el) {
+        var v = text(el.getAttribute('data-href'));
+        if (v !== null) el.href = v.trim();
+    });
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   YOUR MEDIA — drag-and-drop, no HTML editing needed
+   ------------------------------------------------------------------
+   Every picture points at a file in  media/  and carries the old stock
+   photo as a data-fallback. Drop your own file in with the right name
+   and it takes over; until then the placeholder shows. Same for the
+   hero: add media/hero.mp4 and it plays, otherwise the colourful
+   gradient stays.
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+    // Pictures: fall back to the stock photo if your file isn't there yet.
+    document.querySelectorAll('img[data-fallback]').forEach(function (img) {
+        img.addEventListener('error', function handler() {
+            img.removeEventListener('error', handler);   // only ever swap once
+            img.src = img.getAttribute('data-fallback');
+        });
+        // If the browser already gave up before this script ran, retry now.
+        if (img.complete && img.naturalWidth === 0) {
+            img.src = img.getAttribute('data-fallback');
+        }
+    });
+
+    // A video with no usable file leaves an empty black box, so remove
+    // something when that happens: the hero video removes itself (showing
+    // the gradient behind it), a slider video removes its whole slide.
+    var handleMissingVideo = function (video, doomed, useTimeout) {
+        if (!video) return;
+        var drop = function () {
+            if (doomed && doomed.parentNode) doomed.parentNode.removeChild(doomed);
+        };
+        video.addEventListener('error', drop, true);
+        video.querySelectorAll('source').forEach(function (s) {
+            s.addEventListener('error', function () {
+                if (video.networkState === 3 /* NETWORK_NO_SOURCE */) drop();
+            });
+        });
+        if (useTimeout) {
+            setTimeout(function () {
+                if (video.networkState === 3 || video.readyState === 0) drop();
+            }, 3000);
+        }
+    };
+
+    // The hero autoplays, so if it hasn't loaded anything after a moment
+    // the file isn't there — safe to give up and show the gradient.
+    var heroVideo = document.querySelector('.hero-video');
+    handleMissingVideo(heroVideo, heroVideo, true);
+
+    // The about video waits for the viewer to press play, so a low readyState
+    // is normal and must NOT be read as "missing" — only a real load error
+    // removes it, never a timeout.
+    document.querySelectorAll('[data-optional-video]').forEach(function (box) {
+        handleMissingVideo(box.querySelector('video'), box, false);
+    });
+
+    /* Keep the about video inside its own frame — playing it must never take
+       over the screen. The nofullscreen attribute hides the button in Chrome
+       and Edge; Safari and Firefox ignore that, so the listeners below drop
+       straight back out of fullscreen if it is reached another way. */
+    document.querySelectorAll('[data-optional-video] video').forEach(function (v) {
+        v.disablePictureInPicture = true;
+        // double-click is a fullscreen shortcut in several browsers
+        v.addEventListener('dblclick', function (e) { e.preventDefault(); });
+        // iPhone hands video to its own fullscreen player
+        v.addEventListener('webkitbeginfullscreen', function () {
+            if (v.webkitExitFullscreen) v.webkitExitFullscreen();
+        });
+    });
+
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (evt) {
+        document.addEventListener(evt, function () {
+            var el = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!el || !el.closest || !el.closest('[data-optional-video]')) return;
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        });
+    });
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   PORTRAIT SLIDERS — the › arrow moves one picture to the right
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+    var autoRunning = 0;
+
+    document.querySelectorAll('[data-slider]').forEach(function (slider) {
+        var track = slider.querySelector('.slider-track');
+        var prev  = slider.querySelector('.slider-arrow.prev');
+        var next  = slider.querySelector('.slider-arrow.next');
+        if (!track || !prev || !next) return;
+
+        // One step = exactly one slide (plus any gap, which is 0 here).
+        // NB: parseFloat of "0px" is 0, which is falsy — so this must not
+        // use `|| fallback`, or a zero gap would silently become 16px and
+        // the strip would creep out of alignment with every click.
+        var step = function () {
+            var slide = track.querySelector('.slide');
+            if (!slide) return track.clientWidth;
+            var gap = parseFloat(getComputedStyle(track).columnGap);
+            if (isNaN(gap)) gap = 0;
+            return slide.getBoundingClientRect().width + gap;
+        };
+
+        next.addEventListener('click', function () {
+            track.scrollBy({ left: step(), behavior: 'smooth' });
+        });
+        prev.addEventListener('click', function () {
+            track.scrollBy({ left: -step(), behavior: 'smooth' });
+        });
+
+        // Hide an arrow when there is nothing further that way.
+        var update = function () {
+            var atStart = track.scrollLeft < 5;
+            var atEnd   = track.scrollLeft + track.clientWidth >= track.scrollWidth - 5;
+            prev.hidden = atStart;
+            next.hidden = atEnd;
+        };
+        track.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        window.addEventListener('load', update);
+        update();
+
+        /* ── Automatic scrolling ──────────────────────────────────────
+           Moves on one picture every few seconds and loops back to the
+           first at the end. It pauses while someone is looking at it
+           closely (pointer over it, or mid-swipe), and only runs while
+           the slider is actually on screen. */
+        var AUTO_MS = 3000;   // seconds between pictures
+        var timer = null;
+
+        // Someone who has asked their system for less motion gets none.
+        var reduced = window.matchMedia &&
+                      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        var atEnd = function () {
+            return track.scrollLeft + track.clientWidth >= track.scrollWidth - 5;
+        };
+
+        var advance = function () {
+            if (atEnd()) track.scrollTo({ left: 0, behavior: 'smooth' });
+            else track.scrollBy({ left: step(), behavior: 'smooth' });
+        };
+
+        var startAuto = function () {
+            if (reduced || timer) return;
+            timer = setInterval(advance, AUTO_MS);
+        };
+        var stopAuto = function () {
+            if (timer) { clearInterval(timer); timer = null; }
+        };
+        // a manual click restarts the clock instead of fighting it
+        var restartAuto = function () { stopAuto(); startAuto(); };
+
+        /* NOTE: deliberately no pause-on-hover. These pictures are large and
+           centred, so the cursor rests on them while reading or scrolling —
+           hover-pausing froze the slideshow and looked broken. */
+        track.addEventListener('touchstart', stopAuto, { passive: true });
+        track.addEventListener('touchend', startAuto, { passive: true });
+        prev.addEventListener('click', restartAuto);
+        next.addEventListener('click', restartAuto);
+
+        // Start straight away, so it runs even if the observer below never
+        // reports anything. The observer's only job is to pause it while the
+        // slider is off screen.
+        startAuto();
+
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting) startAuto(); else stopAuto();
+                });
+            }, { threshold: 0.05 }).observe(slider);
+        }
+
+        // Pause while the tab is in the background; pick up again on return.
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) stopAuto(); else startAuto();
+        });
+
+        autoRunning++;
+    });
+
+    // Press F12 and look at the Console tab to see this. It tells you whether
+    // the automatic scrolling actually started, and why if it didn't.
+    console.log('[slider] auto-scroll started on ' + autoRunning + ' of ' +
+        document.querySelectorAll('[data-slider]').length + ' sliders' +
+        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? ' — BUT this device asks for reduced motion, so auto-scroll is off'
+            : ''));
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   BOTTOM BAR VISIBILITY
+   ------------------------------------------------------------------
+   1. On the main media: press  -> bar appears
+   2. On the main media: scroll -> bar appears
+   3. On the main media: 5s with no press/scroll -> bar disappears
+   4. Once you reach the work section (a bit past "progress 01") the
+      bar disappears and stays off until the contact section
+   5. Scrolling back up: stays hidden through every section, then
+      reappears when the main media is back on screen
+   6. ...and disappears again 5s later if you do nothing
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+    'use strict';
+
+    var bar      = document.getElementById('bottomBar');
+    var hero     = document.getElementById('home');
+    var progress = document.getElementById('progress01-title');
+    var contact  = document.getElementById('contact-page');
+    if (!bar || !hero) return;
+
+    var IDLE_HIDE_MS      = 5000;  // rule 3 / 6
+    var HERO_MIN_VISIBLE   = 0.3;  // hero counts as "on screen" at 30%
+    var CONTACT_MIN_VISIBLE = 0.2; // contact counts as reached at 20%
+    // Hide as soon as "progress 01" has risen into the lower fifth of the
+    // screen — early in the work section, well before progress 02 appears.
+    // Bigger number = the bar disappears earlier.  (rule 4)
+    var PROGRESS_PASSED_AT  = 0.8;
+
+    var idleTimer = null;
+
+    function fractionVisible(el) {
+        if (!el) return 0;
+        var r = el.getBoundingClientRect();
+        if (!r.height) return 0;
+        var vis = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+        return Math.max(0, vis) / r.height;
+    }
+
+    function viewportHeight() {
+        return window.innerHeight || document.documentElement.clientHeight || 0;
+    }
+
+    function onHero()     { return fractionVisible(hero)    > HERO_MIN_VISIBLE; }
+    function onContact()  { return fractionVisible(contact) > CONTACT_MIN_VISIBLE; }
+
+    function isVisible() { return bar.classList.contains('visible'); }
+
+    /* The whole rule set, as a pure function of where the page is.
+       Kept side-effect free so it can be reasoned about (and tested) on its
+       own; `apply` below is the only thing that touches the DOM.
+         ctx = { heroFrac, contactFrac, progressTop, vh, interacted, visible }
+       returns 'show-dark' | 'show-light' | 'hide' | 'keep-light' | 'keep'   */
+    function decide(ctx) {
+        // Rule 4b — the contact section always shows the bar, dark, no timer.
+        if (ctx.contactFrac > CONTACT_MIN_VISIBLE) return 'show-dark';
+
+        // Rules 1, 2, 5 — the main media: the bar is earned by a press or
+        // a scroll. Without one, leave things exactly as they are so a
+        // running idle timer can finish its job (rules 3 & 6).
+        if (ctx.heroFrac > HERO_MIN_VISIBLE) return ctx.interacted ? 'show-light' : 'keep';
+
+        // Rule 4a — past "progress 01": the work section hides the bar and
+        // it stays hidden all the way to the contact section.
+        if (ctx.progressTop < ctx.vh * PROGRESS_PASSED_AT) return 'hide';
+
+        // The gap between the hero and "progress 01": let an already-visible
+        // bar ride along, but never raise a hidden one — that is what keeps
+        // it hidden on the way back up (rule 5).
+        return ctx.visible ? 'keep-light' : 'keep';
+    }
+
+    function context(interacted) {
+        return {
+            heroFrac:    fractionVisible(hero),
+            contactFrac: fractionVisible(contact),
+            progressTop: progress ? progress.getBoundingClientRect().top : Infinity,
+            vh:          viewportHeight(),
+            interacted:  !!interacted,
+            visible:     isVisible()
+        };
+    }
+
+    function show(dark) {
+        bar.classList.add('visible');
+        bar.classList.toggle('end-zone', !!dark);
+    }
+
+    function hide() {
+        bar.classList.remove('visible', 'end-zone');
+    }
+
+    function clearIdle() {
+        if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    }
+
+    // Rules 3 & 6 — only ever runs while the main media is on screen.
+    function startIdle() {
+        clearIdle();
+        idleTimer = setTimeout(function () {
+            idleTimer = null;
+            if (onHero() && !onContact()) hide();
+        }, IDLE_HIDE_MS);
+    }
+
+    /* The only thing that touches the DOM.
+       `interacted` = this update came from a real press or scroll. */
+    function update(interacted) {
+        switch (decide(context(interacted))) {
+            case 'show-dark':
+                clearIdle();
+                show(true);
+                break;
+            case 'show-light':
+                show(false);
+                startIdle();                        // rules 3 & 6
+                break;
+            case 'hide':
+                clearIdle();
+                hide();
+                break;
+            case 'keep-light':
+                clearIdle();
+                bar.classList.remove('end-zone');
+                break;
+            // 'keep' — deliberately nothing, so the idle timer can run out
+        }
+    }
+
+    // Small debug hook: lets the rule set be checked without scrolling by hand.
+    // window.__bar.decide({heroFrac:1, contactFrac:0, progressTop:9e9, vh:800,
+    //                      interacted:true, visible:false})  ->  'show-light'
+    window.__bar = { decide: decide, context: context };
+
+    /* ── events ──────────────────────────────────────────────────── */
+
+    // Scroll counts as interaction (rule 2). Throttled to one frame.
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+            ticking = false;
+            update(true);
+        });
+    }, { passive: true });
+
+    // Press on the main media counts as interaction (rule 1).
+    // NOTE: mousemove deliberately does NOT count — otherwise the idle
+    // timer restarts on every stray cursor twitch and the bar never hides.
+    hero.addEventListener('click', function () { update(true); });
+    hero.addEventListener('touchstart', function () { update(true); }, { passive: true });
+
+    window.addEventListener('resize', function () { update(false); });
+
+    // Nav + back-to-top: let CSS smooth scrolling do the work, then
+    // re-evaluate once the scroll has settled.
+    document.querySelectorAll('.bottom-nav a, .back-to-top').forEach(function (anchor) {
+        anchor.addEventListener('click', function (e) {
+            var id = this.getAttribute('href');
+            if (!id || id === '#') return;
+            var target = document.querySelector(id);
+            if (!target) return;
+            e.preventDefault();
+            var top = target.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: id === '#home' ? 0 : top - 100, behavior: 'smooth' });
+            setTimeout(function () { update(false); }, 700);
+        });
+    });
+
+    // Start hidden — the bar is earned by a press or a scroll (rules 1 & 2).
+    hide();
+    update(false);
+})();
+
+/* ── Contact form ─────────────────────────────────────────────────
+   With a real Web3Forms access key the message is posted straight to
+   the inbox tied to that key. Without one it falls back to opening the
+   visitor's own mail client. */
+(function () {
+    var form = document.getElementById('direct-form');
+    var statusSpan = document.getElementById('formStatusMsg');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var formData = new FormData(form);
+        var accessKey = formData.get('access_key');
+
+        if (!accessKey || accessKey === 'YOUR_ACCESS_KEY_HERE') {
+            var name = formData.get('name');
+            var email = formData.get('email');
+            var subject = formData.get('subject_line') || 'Art inquiry';
+            var msg = formData.get('message');
+            if (!name || !email || !msg) {
+                statusSpan.innerText = '❌ please fill all fields.';
+                statusSpan.style.color = '#b33';
+                return;
+            }
+            // Address comes from content.js so it only ever lives in one place.
+            var to = (typeof CONTENT !== 'undefined' && CONTENT && CONTENT['contact-email'])
+                     ? CONTENT['contact-email'] : 'eldanafc@gmail.com';
+            window.location.href = 'mailto:' + to + '?subject=' +
+                encodeURIComponent(subject) + '&body=' +
+                encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + msg);
+            statusSpan.innerHTML = '📧 email client opened.';
+            statusSpan.style.color = '#2a7f2a';
+            setTimeout(function () { statusSpan.innerText = ''; }, 5000);
+            return;
+        }
+
+        statusSpan.innerText = 'sending...';
+        try {
+            var res = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            });
+            var data = await res.json();
+            if (data.success) {
+                statusSpan.innerHTML = '✔ message sent!';
+                statusSpan.style.color = '#1f8a4c';
+                form.reset();
+                setTimeout(function () { statusSpan.innerText = ''; }, 4000);
+            } else throw new Error();
+        } catch (err) {
+            statusSpan.innerHTML = '⚠ delivery failed, try email directly.';
+            statusSpan.style.color = '#b44';
+        }
+    });
+})();
+</script>
+</body>
+</html>
