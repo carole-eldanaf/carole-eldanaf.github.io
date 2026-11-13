@@ -68,7 +68,7 @@ Is perception our main way of grasping reality? Do we do the latter only through
   "contact-heading":    `Contact`,
   "contact-email":      `eldanafc@gmail.com`,
   "instagram-handle":   `@carole.eldanaf`,
-  "instagram-url":      `https://instagram.com/carole.eldanaf`,
+  "instagram-url":      `https://www.instagram.com/carole.eldanaf/?hl=en`,
   "contact-note":       `For inquiries — use the form or email directly.`,
 
   /* ── The contact form (grey text inside the empty boxes) ───────── */
